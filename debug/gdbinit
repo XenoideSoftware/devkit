@@ -1,0 +1,24 @@
+# Load the libstdc++ pretty printers when GDB finds them.
+python
+import sys
+import os
+for base in ("/usr/share/gcc/python", "/usr/share/gdb/auto-load"):
+    if os.path.isdir(base):
+        sys.path.insert(0, base)
+        break
+end
+
+set print pretty on
+set print object on
+set print static-members on
+set print vtbl on
+
+# Stop when a C++ exception is thrown.
+catch throw
+
+# Break when ASan/UBSan reports an error.
+break __asan::ReportGenericError
+break __ubsan_on_report
+
+set pagination off
+set confirm off

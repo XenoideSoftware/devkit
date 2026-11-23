@@ -1,0 +1,9 @@
+# Portable orchestration tools only. C++ toolchains (compilers, clang-format,
+# clang-tidy, Mull, Valgrind, debuggers) come from the host or the image; they
+# are never installed through mise or PyPI.
+
+[tools]
+cmake = "3.31.6"
+ninja = "1.12.1"
+python = "3.12.8"
+"pipx:conan" = "2.27.0"

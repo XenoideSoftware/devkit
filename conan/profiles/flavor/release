@@ -1,0 +1,6 @@
+[settings]
+build_type=Release
+
+[conf]
+user.xenoide:flavor=release
+

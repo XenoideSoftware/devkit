@@ -1,0 +1,10 @@
+[valgrind]
+description = "Run Valgrind memcheck/helgrind/drd/callgrind/cachegrind/massif (Linux-only)"
+usage = '''
+flag "--tool <tool>" help="Valgrind tool" default="memcheck" {
+  choices "memcheck" "helgrind" "drd" "callgrind" "cachegrind" "massif"
+}
+flag "--config <config>" help="Override the config" default=""
+flag "--target <target>" help="Executable for profiling tools" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py valgrind --tool "{{usage.tool}}" --config "{{usage.config}}" --target "{{usage.target}}"'

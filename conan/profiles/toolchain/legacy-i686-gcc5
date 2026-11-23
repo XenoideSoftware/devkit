@@ -1,0 +1,16 @@
+# Experimental Windows 9x toolchain, extracted from the old
+# `conan/profiles/windows-x86-gcc`. Hidden unless XENOIDE_EXPERIMENTAL=1.
+include(../base)
+
+[settings]
+os=Windows
+arch=x86
+compiler=gcc
+compiler.version=5.1
+compiler.libcxx=libstdc++11
+compiler.cppstd=17
+compiler.cstd=17
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+user.xenoide:toolchain=legacy-i686-gcc5

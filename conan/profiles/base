@@ -1,0 +1,36 @@
+# Shared base profile. Every toolchain profile includes this file, so the
+# toolchain fragment only has to describe the compiler family.
+#
+# No `include(default)`: the settings below are explicit so that a local build
+# and a devcontainer build are assembled from the same fragments.
+
+{% set sysname = platform.system() %}
+{% set machine = platform.machine() | lower %}
+{% if sysname == "Darwin" %}
+{% set host_os = "Macos" %}
+{% elif sysname == "Windows" %}
+{% set host_os = "Windows" %}
+{% else %}
+{% set host_os = "Linux" %}
+{% endif %}
+{% if machine in ("x86_64", "amd64") %}
+{% set host_arch = "x86_64" %}
+{% elif machine in ("aarch64", "arm64") %}
+{% set host_arch = "armv8" %}
+{% else %}
+{% set host_arch = machine %}
+{% endif %}
+
+# NOTE: Conan evaluates settings in file order, so `compiler.cppstd` cannot be
+# set here before the toolchain fragment has defined `compiler`. Each
+# toolchain profile sets the strict `cppstd=17`/`cstd=17` immediately after
+# its `compiler` line. This is the single place the standard is declared.
+[settings]
+os={{ host_os }}
+arch={{ host_arch }}
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+# Warnings are errors by default; the xenoide-base class also exposes a
+# `werror` option so a single build can opt out without editing a profile.
+tools.build:skip_test=False

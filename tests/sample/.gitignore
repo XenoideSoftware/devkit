@@ -1,0 +1,10 @@
+# Sample consumer hygiene.
+.devkit/
+.deps/
+.conan2/
+.xenoide/
+build/
+coverage/
+mutation/
+CMakeUserPresets.json
+compile_commands.json

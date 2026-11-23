@@ -1,0 +1,20 @@
+include(../base)
+
+{% set cc = os.getenv("XENOIDE_CC", "clang") %}
+{% set cxx = os.getenv("XENOIDE_CXX", "clang++") %}
+{% set detected = detect_api.detect_clang_compiler(cc) %}
+{% set llvm_major = (detected[1] | string).split('.')[0] %}
+
+[settings]
+compiler=apple-clang
+compiler.version={{ (detected[1] | string).split('.')[0] }}
+compiler.libcxx=libc++
+compiler.cppstd=17
+compiler.cstd=17
+
+[conf]
+tools.build:compiler_executables={"c": "{{ cc }}", "cpp": "{{ cxx }}"}
+user.xenoide:toolchain=apple-clang
+user.xenoide:cc={{ cc }}
+user.xenoide:cxx={{ cxx }}
+user.xenoide:llvm_major={{ llvm_major }}

@@ -1,0 +1,55 @@
+[format]
+description = "Format (or --check) first-party C/C++ sources with clang-format"
+usage = '''
+flag "--check" help="Verify formatting without writing" default="false"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py format --check "{{usage.check}}"'
+
+[tidy]
+description = "Run clang-tidy against the active config's compile_commands.json"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+flag "--fix" help="Apply fix-its" default="false"
+flag "--full" help="Check every translation unit instead of git-modified files" default="false"
+flag "--file <file>" help="Check a single file" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py tidy --config "{{usage.config}}" --fix "{{usage.fix}}" --full "{{usage.full}}" --file "{{usage.file}}"'
+
+[cppcheck]
+description = "Run cppcheck against the active config's compile_commands.json"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+flag "--full" help="Check every translation unit" default="false"
+flag "--file <file>" help="Check a single file" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py cppcheck --config "{{usage.config}}" --full "{{usage.full}}" --file "{{usage.file}}"'
+
+[cmake-check]
+description = "Run cmake-checker against the config's CMake File API and trace"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py cmake-check --config "{{usage.config}}"'
+
+[sanitize]
+description = "Build and test an asan/tsan config"
+usage = '''
+flag "--kind <kind>" help="asan or tsan" default="asan" {
+  choices "asan" "tsan"
+}
+flag "--config <config>" help="Override the config" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py sanitize --kind "{{usage.kind}}" --config "{{usage.config}}"'
+
+[coverage]
+description = "Build, test and report coverage (gcov or llvm-cov)"
+usage = '''
+flag "--config <config>" help="Override the config" default=""
+flag "--export <format>" help="text, html or csv" default="text" {
+  choices "text" "html" "csv"
+}
+flag "--check <threshold>" help="Minimum total line coverage percentage" default=""
+flag "--output-dir <dir>" help="Report directory" default=""
+flag "--clean" help="Clean counters and the report directory first" default="false"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py coverage --config "{{usage.config}}" --export "{{usage.export}}" --check "{{usage.check}}" --output-dir "{{usage.output_dir}}" --clean "{{usage.clean}}"'

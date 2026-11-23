@@ -1,0 +1,55 @@
+# Core build tasks. Every task takes an explicit config; the default is the
+# active config (or the host default) resolved by the Python implementation.
+
+[doctor]
+description = "Check tools, versions and devkit pin consistency"
+run = 'python .devkit/mise/scripts/xenoide_dev.py doctor'
+
+[configs]
+description = "List the valid configs for this host"
+run = 'python .devkit/mise/scripts/xenoide_dev.py configs'
+
+[use]
+description = "Set the active config and point build/compile_commands.json at it"
+usage = '''
+arg "<config>" help="Config to activate (e.g. clang-asan)"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py use "{{usage.config}}"'
+
+[deps]
+description = "Install Conan dependencies for a config"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py deps --config "{{usage.config}}"'
+
+[build]
+description = "Build a config"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+flag "--target <target>" help="Build a single CMake target" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py build --config "{{usage.config}}" --target "{{usage.target}}"'
+
+[test]
+description = "Build and run the test suite for a config"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+flag "--filter <regex>" help="Pass -R <regex> to ctest" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py test --config "{{usage.config}}" --filter "{{usage.filter}}"'
+
+[clean]
+description = "Remove build artifacts for a config (or all with --all)"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+flag "--all" help="Remove the whole build root" default="false"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py clean --config "{{usage.config}}" --all "{{usage.all}}"'
+
+[lock]
+description = "Regenerate and merge conan.lock for every valid host config"
+usage = '''
+flag "--config <config>" help="Limit to a single config" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py lock --config "{{usage.config}}"'

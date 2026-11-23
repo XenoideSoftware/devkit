@@ -1,0 +1,20 @@
+# devkit itself. This file only pins the portable orchestration tools and
+# provides the self-test entry point; consumer repositories have their own
+# mise.toml with the DEVKIT_REF/RECIPES_REF/XENOIDE_PACKAGES pins.
+
+[tools]
+cmake = "3.31.6"
+ninja = "1.12.1"
+python = "3.12.8"
+"pipx:conan" = "2.27.0"
+
+[tasks.self-test]
+description = "Build, test, sanitize and cover the sample project"
+run = "python mise/scripts/selftest.py"
+
+[tasks.fmt-check]
+description = "Check the devkit Python and TOML files"
+run = """
+python -m compileall -q mise/scripts
+python -c "import tomllib, pathlib; [tomllib.loads(p.read_text()) for p in pathlib.Path('mise/tasks').glob('*.toml')]"
+"""

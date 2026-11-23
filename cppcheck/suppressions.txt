@@ -1,0 +1,5 @@
+# Base cppcheck suppressions. Add repository-specific entries to
+# .cppcheck-suppressions at the repository root.
+
+missingIncludeSystem
+unmatchedSuppression

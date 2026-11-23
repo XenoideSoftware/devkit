@@ -1,0 +1,4 @@
+# Reserved for genuinely custom Conan settings. The current design does not
+# need any: the active toolchain and flavor are transported as `user.xenoide:*`
+# configuration values, which Conan allows without a settings definition.
+{}

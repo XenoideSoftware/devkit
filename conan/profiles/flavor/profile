@@ -1,0 +1,10 @@
+# Profiling flavor: the first-party code is RelWithDebInfo while every
+# dependency keeps the Release binary set (so no third set of dependencies is
+# built just for callgrind/cachegrind/massif/perf).
+[settings]
+build_type=RelWithDebInfo
+*:build_type=Release
+
+[conf]
+user.xenoide:flavor=profile
+

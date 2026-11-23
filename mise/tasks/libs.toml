@@ -1,0 +1,28 @@
+["editable-add"]
+description = "Register a checkout as a Conan editable in this repo's cache"
+usage = '''
+arg "<path>" help="Path to the library checkout"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py editable-add "{{usage.path}}"'
+
+["editable-remove"]
+description = "Remove an editable and restore the pinned .deps package"
+usage = '''
+arg "<path>" help="Path to the library checkout"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py editable-remove "{{usage.path}}"'
+
+["libs:create"]
+description = "Create a new library skeleton wired to the devkit"
+usage = '''
+arg "<name>" help="Library name (lower-case kebab-case)"
+flag "--dir <dir>" help="Target directory (default: ./<name>)" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py libs-create "{{usage.name}}" --dir "{{usage.dir}}"'
+
+[release]
+description = "Tag the current version (v0.x.y) after a release review"
+usage = '''
+flag "--name <name>" help="Tag message prefix (default: repository name)" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py release --name "{{usage.name}}"'

@@ -1,0 +1,33 @@
+# Builds
+build/
+build-*/
+
+# Repo-local caches and checkouts
+.devkit/
+.deps/
+.conan2/
+.xenoide/
+
+# Coverage / mutation reports
+coverage/
+mutation/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CMakeUserPresets.json
+compile_commands.json
+Testing/
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor
+.idea/
+.vscode/

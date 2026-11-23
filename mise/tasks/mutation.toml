@@ -1,0 +1,10 @@
+[mutation]
+description = "Run Mull mutation testing (Linux-only, clang-mutation)"
+usage = '''
+flag "--config <config>" help="Override the config" default=""
+flag "--target <target>" help="Single test target" default=""
+flag "--threshold <score>" help="Minimum mutation score (0-100)" default=""
+flag "--generate" help="Discover mutants only (dry run)" default="false"
+flag "--clean" help="Clean the mutation build first" default="false"
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py mutation --config "{{usage.config}}" --target "{{usage.target}}" --threshold "{{usage.threshold}}" --generate "{{usage.generate}}" --clean "{{usage.clean}}"'

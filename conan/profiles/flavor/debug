@@ -1,0 +1,6 @@
+[settings]
+build_type=Debug
+
+[conf]
+user.xenoide:flavor=debug
+

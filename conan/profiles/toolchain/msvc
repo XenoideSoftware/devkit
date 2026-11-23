@@ -1,0 +1,15 @@
+include(../base)
+
+{% set detected = detect_api.detect_msvc_version() %}
+
+[settings]
+compiler=msvc
+compiler.version={{ detected[0] }}
+compiler.runtime=dynamic
+compiler.runtime_type=Release
+compiler.cppstd=17
+compiler.cstd=17
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+user.xenoide:toolchain=msvc

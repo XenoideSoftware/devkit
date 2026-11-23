@@ -1,0 +1,34 @@
+# Base Mull configuration. A repository may add its own mull.yml, which the
+# devkit task merges with this file. Paths are regular expressions.
+
+mutators:
+  - cxx_add_to_sub
+  - cxx_comparison
+  - cxx_logical_invert
+
+excludePaths:
+  - .*/Catch2/.*
+  - .*/catch2/.*
+  - .*/\.conan2/.*
+  - .*/\.deps/.*
+  - .*/\.devkit/.*
+  - .*/build.*/.*
+  - .*/tests?/.*
+  - .*/unit-test/.*
+  - .*/libxe-.*-test/.*
+  - .*/libglaze-.*-test/.*
+  - .*/include/c\+\+/.*
+  - /usr/.*
+  - .*/chaiscript/.*
+  - .*/nlohmann/.*
+  - .*/fmt/.*
+  - .*/ryml/.*
+  - .*/c4core/.*
+  - .*/fast_float/.*
+
+includePaths:
+  - .*/src/.*
+
+parallelization:
+  workers: 4
+  executionWorkers: 4

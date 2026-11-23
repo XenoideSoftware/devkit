@@ -1,0 +1,9 @@
+# Base Valgrind suppressions. A repository may add valgrind.supp; the task
+# concatenates both files into .xenoide/valgrind.supp.
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+}

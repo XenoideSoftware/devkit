@@ -1,0 +1,24 @@
+[debug]
+description = "Run an executable under gdb/lldb for the active config"
+usage = '''
+arg "<target>" help="Executable target name"
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+flag "--debugger <debugger>" help="gdb or lldb" default=""
+flag "--test <test>" help="Catch2 test name to run" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py debug "{{usage.target}}" --config "{{usage.config}}" --debugger "{{usage.debugger}}" --test "{{usage.test}}"'
+
+["debug:core"]
+description = "Open the newest core dump"
+usage = '''
+arg "[core]" help="Core file (default: newest in the repository root)" default=""
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py debug-core "{{usage.core}}" --config "{{usage.config}}"'
+
+["debug:launch-json"]
+description = "Generate VS Code launch.json entries for the built targets"
+usage = '''
+flag "--config <config>" help="Config <toolchain>-<flavor>" default=""
+'''
+run = 'python .devkit/mise/scripts/xenoide_dev.py debug-launch-json --config "{{usage.config}}"'

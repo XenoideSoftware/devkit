@@ -1,0 +1,12 @@
+# LLDB initialisation: data formatters, pretty printing, ASan breakpoints.
+settings set target.enable-synthetic-value true
+settings set target.process.stop-on-sharedlibrary-events false
+settings set stop-line-count-before 3
+settings set stop-line-count-after 3
+
+# Break when ASan/UBSan reports an error.
+breakpoint set --name __asan::ReportGenericError
+breakpoint set --name __ubsan_on_report
+
+# `catch throw` equivalent.
+breakpoint set --name __cxa_throw

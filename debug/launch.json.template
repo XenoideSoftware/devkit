@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "gdb: <target>",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/<config>/<target>",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "setupCommands": [
+        { "text": "-enable-pretty-printing" }
+      ]
+    },
+    {
+      "name": "lldb: <target>",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/<config>/<target>",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
