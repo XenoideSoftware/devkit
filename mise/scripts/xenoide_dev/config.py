@@ -95,6 +95,29 @@ def valid_configs_for_host():
     return [Config(toolchain, flavor) for flavor in FLAVORS if flavor in VALID_MATRIX[toolchain]]
 
 
+def valid_configs_for_all_toolchains():
+    """Every config that is meaningful on this host, for lock generation.
+
+    Lockfiles must cover all toolchains that can be selected, not only the
+    host default: a clang lock generated on a gcc host was missing `catch2`
+    and a mixed gcc/clang matrix could not be installed from one lock.
+    """
+    if is_linux():
+        toolchains = ("gcc", "clang")
+    elif is_darwin():
+        toolchains = ("apple-clang", "clang", "gcc")
+    elif is_windows():
+        toolchains = ("msvc", "clang-cl", "mingw-gcc")
+    else:
+        toolchains = (host_toolchain(),)
+    configs = []
+    for toolchain in toolchains:
+        for flavor in FLAVORS:
+            if flavor in VALID_MATRIX.get(toolchain, ()):
+                configs.append(Config(toolchain, flavor))
+    return configs
+
+
 class Context:
     def __init__(self, root):
         self.root = Path(root).resolve()
@@ -147,7 +170,11 @@ class Context:
             if item:
                 args += ["-o", f"&:{item}" if "=" in item and not item.startswith("&") else item]
         lockfile = self.root / "conan.lock"
-        if lockfile.is_file() and not os.environ.get("XENOIDE_IGNORE_LOCK"):
+        if os.environ.get("XENOIDE_IGNORE_LOCK"):
+            # Conan auto-loads conan.lock next to the conanfile; an explicit
+            # empty --lockfile is the only way to switch it off (R2).
+            args.append("--lockfile=")
+        elif lockfile.is_file():
             args.append(f"--lockfile={lockfile}")
         return args
 

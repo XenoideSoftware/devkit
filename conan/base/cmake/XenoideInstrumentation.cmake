@@ -50,5 +50,9 @@ function(xenoide_apply_instrumentation target)
         target_compile_options(${target} ${_scope}
             "-fpass-plugin=${XENOIDE_MULL_PLUGIN}" -O0 -g -grecord-command-line)
         target_compile_definitions(${target} ${_scope} XENOIDE_MUTATION=1)
+        if(XENOIDE_MULL_CONFIG_HASH)
+            target_compile_definitions(${target} ${_scope}
+                XENOIDE_MULL_CONFIG_HASH="${XENOIDE_MULL_CONFIG_HASH}")
+        endif()
     endif()
 endfunction()

@@ -3,10 +3,10 @@ build/
 build-*/
 
 # Repo-local caches and checkouts
-.devkit/
-.deps/
-.conan2/
-.xenoide/
+/.devkit
+/.deps
+/.conan2
+/.xenoide
 
 # Coverage / mutation reports
 coverage/

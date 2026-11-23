@@ -97,6 +97,12 @@ def build_parser():
     _add_config(p)
     p.add_argument("--target", default=None)
     p.add_argument("--threshold", default=None)
+    p.add_argument("--mutators", default=None)
+    p.add_argument("--include", default=None)
+    p.add_argument("--workers", default=None,
+                   type=lambda value: int(value) if str(value).strip() else None)
+    p.add_argument("--timeout", default=None,
+                   type=lambda value: int(value) if str(value).strip() else None)
     _add_bool(p, "--generate")
     _add_bool(p, "--clean")
 
@@ -190,7 +196,9 @@ def main(argv=None):
             quality.mutation(ctx, config=cfg, target=args.target or None,
                              threshold=float(args.threshold) if args.threshold else None,
                              dry_run=args.generate,
-                             clean=args.clean)
+                             clean=args.clean, mutators=args.mutators,
+                             include=args.include, workers=args.workers,
+                             timeout=args.timeout)
         elif command == "valgrind":
             cfg = parse_config(args.config) if args.config else None
             extra = [item for item in args.args if item != "--"]

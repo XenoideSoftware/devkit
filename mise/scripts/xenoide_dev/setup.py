@@ -79,7 +79,7 @@ def _profile_args(ctx, config):
 
 def sync(ctx):
     """Clone (or link) the pinned devkit checkout into ``.devkit/``."""
-    ref = os.environ.get("DEVKIT_REF", "v0.1.0")
+    ref = os.environ.get("DEVKIT_REF", "v0.1.1")
     url = os.environ.get("DEVKIT_URL", f"{DEFAULT_URL_BASE}/devkit.git")
     local = os.environ.get("XENOIDE_DEVKIT_PATH")
     devkit = ctx.devkit
@@ -88,17 +88,27 @@ def sync(ctx):
         local_path = Path(local).expanduser().resolve()
         if not local_path.is_dir():
             fail(f"XENOIDE_DEVKIT_PATH does not exist: {local_path}")
-        if devkit.is_symlink() or devkit.exists():
-            if devkit.is_symlink() and devkit.resolve() == local_path:
+        if devkit.is_symlink():
+            try:
+                current = devkit.resolve(strict=True)
+            except OSError:
+                current = None
+            if current == local_path:
                 info(f"==> .devkit already links to {local_path}")
                 return
-            if devkit.is_dir() and not devkit.is_symlink():
-                shutil.rmtree(devkit)
-            else:
-                devkit.unlink()
+            # Dangling or pointing at another checkout: replace it.
+            devkit.unlink()
+        elif devkit.exists():
+            shutil.rmtree(devkit)
         devkit.symlink_to(local_path, target_is_directory=True)
         info(f"==> Linked .devkit -> {local_path} (development mode)")
         return
+
+    if devkit.is_symlink():
+        # `.devkit` must be a real checkout, never a symlink: checking out
+        # through a link would modify an unrelated sibling developer tree.
+        # Remove it (dangling, foreign, or a valid dev link) before cloning.
+        devkit.unlink()
 
     if (devkit / ".git").is_dir():
         info(f"==> Updating .devkit to {ref}")
@@ -121,13 +131,15 @@ def setup(ctx, skip_doctor=False):
     info("==> Exporting xenoide-base (python_requires)")
     run([conan, "export", str(ctx.devkit / "conan" / "base")], cwd=ctx.root)
 
-    recipes_ref = os.environ.get("RECIPES_REF", "v0.1.0")
+    recipes_ref = os.environ.get("RECIPES_REF", "v0.1.1")
     if recipes_ref:
         info(f"==> Checking out xenoide-recipes at {recipes_ref}")
         recipes = checkout(ctx, "xenoide-recipes", recipes_ref)
-        run([conan, "remote", "remove", "xenoide-recipes"], cwd=ctx.root, check=False)
+        # Local recipes must win over conancenter: the forks (kuba-zip,
+        # backport-cpp, zeromq) intentionally shadow the upstream revisions.
         run([conan, "remote", "add", "xenoide-recipes", str(recipes),
-             "--type=local-recipes-index"], cwd=ctx.root, check=False)
+             "--type=local-recipes-index", "--index", "0", "--force"],
+            cwd=ctx.root, check=False)
 
     release = validate_config(Config(_host_toolchain(), "release"))
     packages = parse_packages(os.environ.get("XENOIDE_PACKAGES", ""))
@@ -150,16 +162,42 @@ def setup(ctx, skip_doctor=False):
             run([conan, "create", str(package_dir / "glazed"),
                  *_profile_args(ctx, release), "--build=missing"], cwd=ctx.root)
 
+    # cmake-checker is part of every tools environment (Q1), even when the
+    # consumer does not list it in XENOIDE_PACKAGES. Build it from its pinned
+    # tag when the cache does not already provide it. The devkit self-test
+    # disables it explicitly because it runs with an isolated, offline cache.
+    want_checker = os.environ.get("XENOIDE_TOOLS_CMAKE_CHECKER", "1").lower() \
+        not in ("0", "false", "no", "off")
+    if want_checker:
+        _ensure_cmake_checker(ctx, conan, packages, release)
+
     info("==> Installing the devkit tools environment")
     tools_out = ctx.root / ".xenoide" / "tools"
-    has_checker = any(name == "cmake-checker" for name, _ in packages)
     run([conan, "install", str(ctx.devkit / "conan" / "tools"),
          "-of", str(tools_out), *_profile_args(ctx, release),
-         f"-o", f"&:with_cmake_checker={has_checker}", "--build=missing"],
+         "-o", f"&:with_cmake_checker={want_checker}", "--build=missing"],
         cwd=ctx.root, check=False)
 
     if not skip_doctor:
         doctor(ctx)
+
+
+def _ensure_cmake_checker(ctx, conan, packages, release):
+    if any(name == "cmake-checker" for name, _ in packages):
+        return
+    listing = run([conan, "list", "cmake-checker/0.1.0"],
+                  cwd=ctx.root, capture=True, check=False)
+    if listing.returncode == 0 and "cmake-checker/0.1.0" in listing.stdout:
+        info("==> cmake-checker is already in the local cache")
+        return
+    ref = os.environ.get("CMAKE_CHECKER_REF", "v0.1.1")
+    info(f"==> Building cmake-checker at {ref} (needed by cmake-check)")
+    package_dir = checkout(ctx, "cmake-checker", ref)
+    for lockfile in list(package_dir.glob("conan.lock")) + \
+            list(package_dir.glob("*/conan.lock")):
+        lockfile.unlink()
+    run([conan, "create", str(package_dir),
+         *_profile_args(ctx, release), "--build=missing"], cwd=ctx.root)
 
 
 def _host_toolchain():
@@ -214,7 +252,7 @@ def doctor(ctx):
     if not python_found:
         failures.append("python (or python3) not found")
 
-    devkit_ref = os.environ.get("DEVKIT_REF", "v0.1.0")
+    devkit_ref = os.environ.get("DEVKIT_REF", "v0.1.1")
     base_version = _devkit_base_version(ctx)
     expected = devkit_ref[1:] if devkit_ref.startswith("v") else devkit_ref
     if base_version == expected:
@@ -243,10 +281,37 @@ def doctor(ctx):
             warnings.append(f"{tool} not found (needed only by the matching task)")
 
     if llvm_major:
-        for tool in (f"clang-tidy-{llvm_major}", f"mull-runner-{llvm_major}",
-                     f"mull-reporter-{llvm_major}"):
+        for tool in (f"clang-tidy-{llvm_major}", f"llvm-cov-{llvm_major}",
+                     f"llvm-profdata-{llvm_major}"):
             if shutil.which(tool):
                 info(f"  ok    {tool:22} {shutil.which(tool)}")
+
+    info("== doctor: LLVM / Mull ==")
+    for name in ("clang", "clang-17", "clang-18", "clang-19"):
+        found = shutil.which(name)
+        if not found:
+            continue
+        version = _compiler_version(found) or "unknown"
+        info(f"  ok    {name:22} {version} ({found})")
+        major = version.split(".")[0]
+        if shutil.which(f"mull-runner-{major}") and shutil.which(f"mull-reporter-{major}"):
+            info(f"  ok    mull-{major:<17} runner+reporter present")
+        elif shutil.which("mull-runner-19") and shutil.which("mull-reporter-19"):
+            warnings.append(
+                f"clang {major} has no matching Mull; mutation uses "
+                f"XENOIDE_CC=clang-19 XENOIDE_CXX=clang++-19")
+        else:
+            info(f"  --    mull-{major:<17} not installed (only needed by `mise run mutation`)")
+
+    default_cc = shutil.which("clang")
+    if default_cc:
+        default_version = _compiler_version(default_cc) or "unknown"
+        default_major = default_version.split(".")[0]
+        if default_major and not (shutil.which(f"mull-runner-{default_major}")
+                                  or shutil.which("mull-runner")):
+            warnings.append(
+                f"default clang is {default_major} but Mull targets another LLVM; "
+                f"`mise run mutation` selects a matching clang automatically")
 
     if is_linux():
         # Known kernel/runtime interaction: high mmap_rnd_bits breaks old

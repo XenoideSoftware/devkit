@@ -1,9 +1,19 @@
 # Base Valgrind suppressions. A repository may add valgrind.supp; the task
 # concatenates both files into .xenoide/valgrind.supp.
-
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-}
+#
+# This file is intentionally empty of suppression blocks. A block like
+#   { name
+#     Memcheck:Leak
+#     ...
+#   }
+# is rejected by Valgrind ("must contain at least one location line") because
+# `...` is not a location. Add real entries here only with a concrete
+# `obj:`/`fun:` frame, for example:
+#
+# {
+#    libfoo_alloc_leak
+#    Memcheck:Leak
+#    match-leak-kinds: reachable
+#    fun:malloc
+#    obj:*/libfoo.so*
+# }

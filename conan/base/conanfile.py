@@ -88,7 +88,7 @@ class XenoideCMake(ConanFile):
     # The python_requires recipe's own identity. Consumer recipes override
     # name/version with their own version file.
     name = "xenoide-base"
-    version = "0.1.0"
+    version = "0.1.1"
 
     package_type = "application"
     settings = "os", "compiler", "build_type", "arch"
@@ -280,27 +280,44 @@ class XenoideCMake(ConanFile):
         cmake_dir = self._devkit_cmake_dir().replace("\\", "/")
 
         tc = CMakeToolchain(self)
-        tc.variables["XENOIDE_INSTRUMENT"] = str(self.options.get_safe("instrument") or "none")
-        tc.variables["XENOIDE_WERROR"] = "ON" if self.options.get_safe("werror") else "OFF"
-        tc.variables["XENOIDE_ENABLE_TESTING"] = "ON" if self.options.get_safe("with_tests") else "OFF"
-        tc.variables["XENOIDE_BUILD_VERSION"] = str(self.version)
-        tc.variables["XENOIDE_BUILD_COMMIT"] = commit
-        tc.variables[f"{prefix}_BUILD_VERSION"] = str(self.version)
-        tc.variables[f"{prefix}_BUILD_COMMIT"] = commit
-        tc.variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "ON"
-        tc.variables["XENOIDE_CMAKE_MODULE_PATH"] = cmake_dir
+        tc.cache_variables["XENOIDE_INSTRUMENT"] = str(self.options.get_safe("instrument") or "none")
+        tc.cache_variables["XENOIDE_WERROR"] = "ON" if self.options.get_safe("werror") else "OFF"
+        tc.cache_variables["XENOIDE_ENABLE_TESTING"] = "ON" if self.options.get_safe("with_tests") else "OFF"
+        tc.cache_variables["XENOIDE_BUILD_VERSION"] = str(self.version)
+        tc.cache_variables["XENOIDE_BUILD_COMMIT"] = commit
+        tc.cache_variables[f"{prefix}_BUILD_VERSION"] = str(self.version)
+        tc.cache_variables[f"{prefix}_BUILD_COMMIT"] = commit
+        tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "ON"
 
         # Inherited by instrumented test targets via xenoide_add_catch2_tests().
-        tc.variables["XENOIDE_ASAN_OPTIONS"] = (
+        tc.cache_variables["XENOIDE_ASAN_OPTIONS"] = (
             "detect_leaks=1:abort_on_error=1:strict_string_checks=1"
         )
-        tc.variables["XENOIDE_UBSAN_OPTIONS"] = "print_stacktrace=1:halt_on_error=1"
-        tc.variables["XENOIDE_TSAN_OPTIONS"] = "halt_on_error=1"
+        tc.cache_variables["XENOIDE_UBSAN_OPTIONS"] = "print_stacktrace=1:halt_on_error=1"
+        tc.cache_variables["XENOIDE_TSAN_OPTIONS"] = "halt_on_error=1"
 
         if str(self.options.get_safe("instrument") or "none") == "mutation":
-            tc.variables["XENOIDE_MULL_PLUGIN"] = _find_mull_plugin(self)
+            tc.cache_variables["XENOIDE_MULL_PLUGIN"] = _find_mull_plugin(self)
+            mull_config = os.environ.get("MULL_CONFIG")
+            if mull_config and os.path.isfile(mull_config):
+                import hashlib
+
+                with open(mull_config, "rb") as handle:
+                    digest = hashlib.sha256(handle.read()).hexdigest()[:16]
+                # Part of the compile command, so changing the mutation
+                # configuration forces a rebuild instead of silently reusing
+                # mutants discovered with the old settings (M1).
+                tc.cache_variables["XENOIDE_MULL_CONFIG_HASH"] = digest
 
         self.xenoide_toolchain(tc)
+        # Normal `code()` variables are `set(... CACHE)` entries in the
+        # toolchain file and therefore never override an existing cache. Move
+        # everything to cache_variables so Conan writes them into
+        # CMakePresets.json (`-D...`); `cmake --preset` then updates a stale
+        # build tree whenever an option changes (C1).
+        for key, value in list(tc.variables.items()):
+            tc.cache_variables.setdefault(key, value)
+        tc.variables.clear()
         tc.generate()
 
         # Toolchain variables are cache variables, so a project() argument

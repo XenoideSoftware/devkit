@@ -5,5 +5,5 @@
 [tools]
 cmake = "3.31.6"
 ninja = "1.12.1"
-python = "3.12.8"
+python = "3.12.16"
 "pipx:conan" = "2.27.0"

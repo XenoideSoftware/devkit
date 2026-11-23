@@ -9,7 +9,7 @@ This file is the index for every repository in the Xenoide component family.
 |---|---|
 | `devkit` | Conan config, `xenoide-base` python_requires, CMake modules, mise tasks, Docker image, shared suppressions, docs |
 | `xenoide` | The IDE (Qt6 is the supported UI) |
-| `xe-engine` | The engine, its tools and demos |
+| `xengine` | The engine, its tools and demos |
 | `cmake-checker` | The CMake style checker tool |
 | `glazer` | The Glaze generator; exports `glazer` and `glazed` in lockstep |
 | `xenoide-pocs` | Versioned experiments |

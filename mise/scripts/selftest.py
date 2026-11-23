@@ -37,11 +37,14 @@ def main():
     env["XENOIDE_PACKAGES"] = ""
     env["CONAN_HOME"] = str(work / ".conan2")
     env["XENOIDE_BUILD_ROOT"] = "build"
-    env.setdefault("XENOIDE_CC", "gcc")
+    # The self-test has no recipes remote and must stay offline; build the
+    # tools environment without the in-house cmake-checker.
+    env["XENOIDE_TOOLS_CMAKE_CHECKER"] = "0"
 
     def devkit(*args):
         run([sys.executable, str(SCRIPT), *args], cwd=project, env=env)
 
+    devkit("sync")
     devkit("setup", "--skip-doctor")
 
     configs = ["gcc-debug"]
@@ -55,6 +58,14 @@ def main():
 
     for config in configs:
         print(f"==> self-test config {config}")
+        if config.startswith("clang"):
+            env["XENOIDE_CC"] = "clang"
+            env["XENOIDE_CXX"] = "clang++"
+        else:
+            env["XENOIDE_CC"] = "gcc"
+            env["XENOIDE_CXX"] = "g++"
+        # Each config reselects the compiler, so drop the cached lock/build of
+        # a differently-pinned toolchain between runs.
         devkit("deps", "--config", config)
         devkit("build", "--config", config)
         devkit("test", "--config", config)
